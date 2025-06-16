@@ -11,5 +11,11 @@ namespace PRA_B4_FOTOKIOSK.models
         public string Name { get; set; }
         public decimal Price { get; set; }
         public string Description { get; set; }
+
+        // Add this ToString() method so the ComboBox displays the Name instead of the class name
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }
