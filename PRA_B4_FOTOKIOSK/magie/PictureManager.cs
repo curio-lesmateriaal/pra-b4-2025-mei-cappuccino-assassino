@@ -13,26 +13,23 @@ namespace PRA_B4_FOTOKIOSK.magie
 {
     public class PictureManager
     {
-        public static Home? Instance { get; set; }
+
+        public static Home Instance { get; set; }
+       
 
         public static void UpdatePictures(List<KioskPhoto> PicturesToDisplay)
         {
-            if (Instance == null) return;
-
-            var panel = Instance.FindName("spPictures") as WrapPanel;
-            if (panel == null) return;
-
-            panel.Children.Clear();
-            foreach (KioskPhoto picture in PicturesToDisplay)
-            {
-                Image image = new Image();
-                var bitmap = pathToImage(picture.Source);
-                image.Source = bitmap;
-                image.Width = 1920 / 3.5;
-                image.Height = 1080 / 3.5;
-                panel.Children.Add(image);
-                Console.WriteLine(picture);
-            }
+            Instance.spPictures.Children.Clear();
+                foreach (KioskPhoto picture in PicturesToDisplay)
+                {
+                    Image image = new Image();
+                    var bitmap = pathToImage(picture.Source);
+                    image.Source = bitmap;
+                    image.Width = 1920 / 3.5;
+                    image.Height = 1080 / 3.5;
+                Instance.spPictures.Children.Add(image);
+                    Console.WriteLine(picture);
+                }
         }
 
         public static BitmapImage pathToImage(string path)
@@ -46,5 +43,6 @@ namespace PRA_B4_FOTOKIOSK.magie
 
             return img;
         }
+
     }
 }

@@ -4,62 +4,67 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 
 namespace PRA_B4_FOTOKIOSK.controller
 {
     public class PictureController
     {
-        // De window die we laten zien op het scherm
         public static Home Window { get; set; }
-
-
-        // De lijst met fotos die we laten zien
         public List<KioskPhoto> PicturesToDisplay = new List<KioskPhoto>();
-        
-        
-        // Start methode die wordt aangeroepen wanneer de foto pagina opent.
+
         public void Start()
         {
-            // Get today's day number (0 = Sunday, 6 = Saturday)
+            PicturesToDisplay.Clear();
+
             var now = DateTime.Now;
             int today = (int)now.DayOfWeek;
 
-            // Clear existing list
-            PicturesToDisplay.Clear();
+            // Alleen foto's van de laatste 2,5 minuut
+            DateTime lowerBound = now.AddMinutes(-2).AddSeconds(-30);
+            DateTime upperBound = now;
 
-            // Initializeer de lijst met fotos
-            foreach (string dir in Directory.GetDirectories(@"../../../fotos"))
+            string basePath = Path.GetFullPath(@"../../../fotos");
+            var allPhotos = new List<(DateTime Time, string Path)>();
+
+            foreach (string dir in Directory.GetDirectories(basePath))
             {
-                // Extract the day number from folder name (e.g., "0_Zondag" -> 0)
                 string folderName = Path.GetFileName(dir);
-                if (!int.TryParse(folderName.Split('_')[0], out int folderDay))
-                    continue;
-
-                // Only process photos from today's folder
-                if (folderDay == today)
+                string[] parts = folderName.Split('_');
+                if (parts.Length > 0 && int.TryParse(parts[0], out int folderDay) && folderDay == today)
                 {
                     foreach (string file in Directory.GetFiles(dir))
                     {
-                        // Extract ID from filename (e.g., "10_05_30_id8824.jpg" -> 8824)
                         string fileName = Path.GetFileNameWithoutExtension(file);
-                        string idPart = fileName.Split('_').Last();
-                        int photoId = int.Parse(idPart.Substring(2)); // Remove "id" prefix
-
-                        PicturesToDisplay.Add(new KioskPhoto() { Id = photoId, Source = file });
+                        string[] fileParts = fileName.Split('_');
+                        if (fileParts.Length >= 3 &&
+                            int.TryParse(fileParts[0], out int hour) &&
+                            int.TryParse(fileParts[1], out int minute) &&
+                            int.TryParse(fileParts[2], out int second))
+                        {
+                            DateTime photoTime = new DateTime(now.Year, now.Month, now.Day, hour, minute, second);
+                            if (photoTime >= lowerBound && photoTime <= upperBound)
+                            {
+                                allPhotos.Add((photoTime, file));
+                            }
+                        }
                     }
                 }
             }
 
-            // Update de fotos
+            // Sorteer op tijd
+            allPhotos = allPhotos.OrderBy(p => p.Time).ToList();
+
+            foreach (var photo in allPhotos)
+            {
+                PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = photo.Path });
+            }
+
             PictureManager.UpdatePictures(PicturesToDisplay);
         }
 
-        // Wordt uitgevoerd wanneer er op de Refresh knop is geklikt
         public void RefreshButtonClick()
         {
-            // Reload pictures when refresh is clicked
             Start();
         }
     }
